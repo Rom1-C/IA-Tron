@@ -110,7 +110,7 @@ class Server:
                         try:
                             contestant['socket'].send(
                                 "FORFAIT \"{0}\" n'est pas une entrée valide".format(message).encode())
-                            print('{0} est disqualifié (Raison: Message incorrect)'.format(contestant['name']))
+                            print('{0} est disqualifié (Raison: Message incorrect : {1})'.format(contestant['name'], message))
                             contestant['alive'] = False
                             self.alive = self.alive - 1
                             canvas.itemconfigure(contestant['text'], fill='magenta')

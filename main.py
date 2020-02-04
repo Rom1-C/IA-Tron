@@ -25,8 +25,7 @@ def client(numero):
         print('La grille est de {0} et je suis en {1}'.format(size, position))
         while True:
             # mysocket.send(random.choice(possibility).encode())
-            mysocket.send('LFT'.encode())
-            # mysocket.send("YOLO".encode()) # Test de message incorrect
+            mysocket.send("LEFT".encode()) # Test de message incorrect
             # mysocket.close() # Test pour faire crasher la socket cote serveur
             data = mysocket.recv(64).decode()
             # time.sleep(5.0) # Test de timeout

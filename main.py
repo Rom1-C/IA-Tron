@@ -21,6 +21,7 @@ def client(numero):
         mysocket.send('Client {0}'.format(numero).encode())
         print('Je suis le joueur : {0}'.format(mysocket.recv(64).decode()))
         data = mysocket.recv(64).decode()
+        print(data)
         size, position = data.split(';')
         print('La grille est de {0} et je suis en {1}'.format(size, position))
         while True:
@@ -39,7 +40,7 @@ def client(numero):
 if __name__ == '__main__':
     try:
         for i in range(4):
-            thread = Client(i)
+            thread = Client(i+1)
             thread.daemon = True
             thread.start()
         while True:

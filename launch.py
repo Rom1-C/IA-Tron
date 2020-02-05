@@ -29,11 +29,11 @@ class Server:
             self.serversocket.listen(4)
             socket.setdefaulttimeout(1)
             while len(self.contestants) < 4:
-                print("En attente de connexion du joueur {0}".format(len(self.contestants)))
+                print("En attente de connexion du joueur {0}".format(len(self.contestants)+1))
                 (clientsocket, address) = self.serversocket.accept()
 
                 name = clientsocket.recv(64).decode()
-                clientsocket.send(str(len(self.contestants)).encode())
+                clientsocket.send(str(len(self.contestants)+1).encode())
 
                 de = ("%02x" % random.randint(0, 255))
                 re = ("%02x" % random.randint(0, 255))
@@ -65,6 +65,7 @@ class Server:
                 setColor(canvas, size, contestant)
 
                 print("{0} (from : {1}) rejoins la game !".format(name, address))
+                print("{0},{1}".format(contestant['position'][0], contestant['position'][1]).encode())
                 contestant['socket'].send("{0}:{1};{2}:{3}".format(len(self.grid), len(self.grid[0]), contestant['position'][0],
                                                                    contestant['position'][1]).encode())
 

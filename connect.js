@@ -46,7 +46,7 @@ const eTron = {
 		if (buffer.logs.length == 1) console.log(`Je suis le joueur ${buffer.logs}`); // 1ere réception de données
 
 		else if (buffer.logs.length == 2) { // 2nde réception de données (initialisation de la taille de la grille et la position du joueur)
-			gridSize = buffer.logs[0];
+			gridSize = [...buffer.logs[0].split`,`];
 			[eTron.y, eTron.x] = buffer.logs[1].split`,`;
 			console.log(`La grille est de ${gridSize}, et je suis en ${buffer.logs[1]}`);
 		}
@@ -55,6 +55,7 @@ const eTron = {
 			updateEnemies(); // Mise à jour de la position des ennemis
 			if (buffer.logs.length > 2) [eTron.y, eTron.x] = buffer.logs[0].split`,`; // À partir de la 3eme réception de données, le format est différent
 			history.add(`(${eTron.y}, ${eTron.x})`); // On ajoute la position du joueur à l'historique
+			console.log(gridSize[0]);
 
 			do {
 				moves.splice(moves.indexOf(eTron.illegal), 1); // On retire le mouvement illegal de la liste
@@ -69,7 +70,7 @@ const eTron = {
 				switch (next) {
 					case "UP":
 						coord = `(${eTron.y}, ${1*eTron.x - 1})`;
-						if (eTron.x - 1 >= 0 && !history.has(coord)) {
+						if (1*eTron.x - 1 >= 0 && !history.has(coord)) {
 							console.log(`\x1b[32mJe peux aller en ${coord}\x1b[0m`);
 							canMove = true;
 						} else {
@@ -79,7 +80,8 @@ const eTron = {
 						break;
 					case "DOWN":
 						coord = `(${eTron.y}, ${1*eTron.x + 1})`;
-						if (eTron.x + 1 < gridSize && !history.has(coord)) {
+						console.log(1*eTron.y + 1);
+						if (1*eTron.x + 1 < gridSize[0] && !history.has(coord)) {
 							console.log(`\x1b[32mJe peux aller en ${coord}\x1b[0m`);
 							canMove = true;
 						} else {
@@ -89,7 +91,7 @@ const eTron = {
 						break;
 					case "LEFT":
 						coord = `(${1*eTron.y - 1}, ${eTron.x})`;
-						if (eTron.y - 1 >= 0 && !history.has(coord)) {
+						if (1*eTron.y - 1 >= 0 && !history.has(coord)) {
 							console.log(`\x1b[32mJe peux aller en ${coord}\x1b[0m`);
 							canMove = true;
 						} else {
@@ -99,7 +101,7 @@ const eTron = {
 						break;
 					case "RIGHT":
 						coord = `(${1*eTron.y + 1}, ${eTron.x})`;
-						if (eTron.y + 1 < gridSize && !history.has(coord)) {
+						if (1*eTron.y + 1 < gridSize[1] && !history.has(coord)) {
 							console.log(`\x1b[32mJe peux aller en ${coord}\x1b[0m`);
 							canMove = true;
 						} else {

@@ -13,6 +13,7 @@ const updateEnemies = () => {
 		[enemies[index].y, enemies[index].x] = [y, x];
 		if (buffer.logs.length > 2) history.add(`(${y}, ${x})`);
 	});
+	if (!enemies.filter(enemy => enemy.y != -1 || enemy.x != -1).length) console.log("\x1b[32mJe gagne!\x1b[0m");
 };
 
 /* -------------------------------------------------------- */
@@ -28,71 +29,90 @@ const buffer = {
 const eTron = {
 	y: -1, // Colonne
 	x: -1, // Ligne
-	prev: "",
+	illegal: "",
+	/*
+	 * Déplacement du pion
+	 */
 	move: data => {
 		const moves = ["DOWN", "UP", "LEFT", "RIGHT"];
 		let canMove = false;
 		let next;
+		let coord;
+
+		let subGrid = [];
+
 		buffer.decode(data);
 
-		if (buffer.logs.length == 1) console.log(`Je suis le joueur ${buffer.logs}`);
+		if (buffer.logs.length == 1) console.log(`Je suis le joueur ${buffer.logs}`); // 1ere réception de données
 
-		else if (buffer.logs.length == 2) {
+		else if (buffer.logs.length == 2) { // 2nde réception de données (initialisation de la taille de la grille et la position du joueur)
 			gridSize = buffer.logs[0];
 			[eTron.y, eTron.x] = buffer.logs[1].split`,`;
 			console.log(`La grille est de ${gridSize}, et je suis en ${buffer.logs[1]}`);
-			history.add(`${buffer.logs[1].split`,`[0]}, ${buffer.logs[1].split`,`[1]})`);
 		}
-		if (buffer.logs.length >= 2) {
-			updateEnemies();
-			if (buffer.logs.length > 2) [eTron.y, eTron.x] = buffer.logs[0].split`,`;
+
+		if (buffer.logs.length >= 2) { // Au delà de la 2nde réception
+			updateEnemies(); // Mise à jour de la position des ennemis
+			if (buffer.logs.length > 2) [eTron.y, eTron.x] = buffer.logs[0].split`,`; // À partir de la 3eme réception de données, le format est différent
+			history.add(`(${eTron.y}, ${eTron.x})`); // On ajoute la position du joueur à l'historique
 
 			do {
-				moves.splice(moves.indexOf(eTron.prev), 1);
-				next = moves[~~(Math.random() * moves.length)];
+				moves.splice(moves.indexOf(eTron.illegal), 1); // On retire le mouvement illegal de la liste
+				next = moves[~~(Math.random() * moves.length)]; // On choisir la prochaine direction parmi les possibilités restantes
 
-				console.log(`Je suis en ${eTron.y}, ${eTron.x} et je vais dans la direction: ${next}.`);
-				//console.log(history);
+				console.log(`Je suis en \x1b[33m(${eTron.y}, ${eTron.x})\x1b[0m,  et je vais dans la direction: \x1b[33m${next}\x1b[0m.`);
 
+				/*
+				 * Selon la direction choisie, on vérifie la disponibilité de la case ciblée.
+				 * Si mouvement impossible on le marque comme illegal.
+				 */
 				switch (next) {
 					case "UP":
-						if (eTron.x - 1 >= 0 && !history.has(`(${eTron.y}, ${eTron.x - 1})`)) {
+						coord = `(${eTron.y}, ${1*eTron.x - 1})`;
+						if (eTron.x - 1 >= 0 && !history.has(coord)) {
+							console.log(`\x1b[32mJe peux aller en ${coord}\x1b[0m`);
 							canMove = true;
-							eTron.prev = "DOWN";
 						} else {
-							eTron.prev = next;
+							console.log("\x1b[31mLa case est invalide, je change de direction.\x1b[0m");
+							eTron.illegal = next;
 						}
 						break;
 					case "DOWN":
-						if (eTron.x + 1 < gridSize && !history.has(`(${eTron.y}, ${eTron.x + 1})`)) {
+						coord = `(${eTron.y}, ${1*eTron.x + 1})`;
+						if (eTron.x + 1 < gridSize && !history.has(coord)) {
+							console.log(`\x1b[32mJe peux aller en ${coord}\x1b[0m`);
 							canMove = true;
-							eTron.prev = "UP";
 						} else {
-							eTron.prev = next;
+							console.log("\x1b[31mLa case est invalide, je change de direction.\x1b[0m");
+							eTron.illegal = next;
 						}
 						break;
 					case "LEFT":
-						if (eTron.y - 1 >= 0 && !history.has(`(${eTron.y - 1}, ${eTron.x})`)) {
+						coord = `(${1*eTron.y - 1}, ${eTron.x})`;
+						if (eTron.y - 1 >= 0 && !history.has(coord)) {
+							console.log(`\x1b[32mJe peux aller en ${coord}\x1b[0m`);
 							canMove = true;
-							eTron.prev = "RIGHT";
 						} else {
-							eTron.prev = next;
+							console.log("\x1b[31mLa case est invalide, je change de direction.\x1b[0m");
+							eTron.illegal = next;
 						}
 						break;
 					case "RIGHT":
-						if (eTron.y + 1 < gridSize && !history.has(`(${eTron.y + 1}, ${eTron.x})`)) {
+						coord = `(${1*eTron.y + 1}, ${eTron.x})`;
+						if (eTron.y + 1 < gridSize && !history.has(coord)) {
+							console.log(`\x1b[32mJe peux aller en ${coord}\x1b[0m`);
 							canMove = true;
-							eTron.prev = "LEFT";
 						} else {
-							eTron.prev = next;
+							console.log("\x1b[31mLa case est invalide, je change de direction.\x1b[0m");
+							eTron.illegal = next;
 						}
 						break;
 					default:
-						console.log("Tanpijemeur");
+						console.log("\x1b[31mTanpijemeur\x1b[0m");
+						return false;
 				}
 			} while (!canMove);
 
-			history.add(`(${eTron.y}, ${eTron.x})`);
 			client.write(next);
 		}
 	}

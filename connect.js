@@ -8,7 +8,7 @@ const signUp = () => client.write('eTron');
 
 /* Mise à jour des positions ennemies */
 const updateEnemies = () => {
-	buffer.logs.slice(1).forEach((enemy, index) => {
+	[...buffer.logs].splice(eTron.i, 1).forEach((enemy, index) => {
 		let [y, x] = enemy.split`,`;
 		[enemies[index].y, enemies[index].x] = [y, x];
 		if (buffer.logs.length > 2) history.add(`(${y}, ${x})`);
@@ -29,21 +29,23 @@ const buffer = {
 const eTron = {
 	y: -1, // Colonne
 	x: -1, // Ligne
+	i: -1, // Indice du client (nécessaire pour récupérer ses coordonnées, peu importe sa position dans la liste des clients)
 	illegal: "",
 	/*
-	 * Déplacement du pion
+	 * Déplacement naïf du pion
 	 */
-	move: data => {
+	stupid: data => {
 		const moves = ["DOWN", "UP", "LEFT", "RIGHT"];
 		let canMove = false;
 		let next;
 		let coord;
 
-		let subGrid = [];
-
 		buffer.decode(data);
 
-		if (buffer.logs.length == 1) console.log(`Je suis le joueur ${buffer.logs}`); // 1ere réception de données
+		if (buffer.logs.length == 1) {
+			eTron.i = Number(buffer.logs) - 1;
+			console.log(`Je suis le joueur ${buffer.logs}`); // 1ere réception de données
+		}
 
 		else if (buffer.logs.length == 2) { // 2nde réception de données (initialisation de la taille de la grille et la position du joueur)
 			gridSize = [...buffer.logs[0].split`,`];
@@ -53,9 +55,9 @@ const eTron = {
 
 		if (buffer.logs.length >= 2) { // Au delà de la 2nde réception
 			updateEnemies(); // Mise à jour de la position des ennemis
-			if (buffer.logs.length > 2) [eTron.y, eTron.x] = buffer.logs[0].split`,`; // À partir de la 3eme réception de données, le format est différent
+
+			if (buffer.logs.length > 2) [eTron.y, eTron.x] = buffer.logs[eTron.i].split`,`; // À partir de la 3eme réception de données, le format est différent
 			history.add(`(${eTron.y}, ${eTron.x})`); // On ajoute la position du joueur à l'historique
-			console.log(gridSize[0]);
 
 			do {
 				moves.splice(moves.indexOf(eTron.illegal), 1); // On retire le mouvement illegal de la liste
@@ -70,7 +72,7 @@ const eTron = {
 				switch (next) {
 					case "UP":
 						coord = `(${eTron.y}, ${1*eTron.x - 1})`;
-						if (1*eTron.x - 1 >= 0 && !history.has(coord)) {
+						if (Number(1*eTron.x - 1) >= 0 && !history.has(coord)) {
 							console.log(`\x1b[32mJe peux aller en ${coord}\x1b[0m`);
 							canMove = true;
 						} else {
@@ -80,8 +82,8 @@ const eTron = {
 						break;
 					case "DOWN":
 						coord = `(${eTron.y}, ${1*eTron.x + 1})`;
-						console.log(1*eTron.y + 1);
-						if (1*eTron.x + 1 < gridSize[0] && !history.has(coord)) {
+						//console.log((1*eTron.x + 1), (1*gridSize[0]), (1*eTron.x + 1) < (1*gridSize[0]), typeof (1*eTron.x + 1), typeof (1*gridSize[0]))
+						if (Number(1*eTron.x + 1) < Number(1*gridSize[0]) && !history.has(coord)) {
 							console.log(`\x1b[32mJe peux aller en ${coord}\x1b[0m`);
 							canMove = true;
 						} else {
@@ -91,7 +93,7 @@ const eTron = {
 						break;
 					case "LEFT":
 						coord = `(${1*eTron.y - 1}, ${eTron.x})`;
-						if (1*eTron.y - 1 >= 0 && !history.has(coord)) {
+						if (Number(1*eTron.y - 1) >= 0 && !history.has(coord)) {
 							console.log(`\x1b[32mJe peux aller en ${coord}\x1b[0m`);
 							canMove = true;
 						} else {
@@ -101,7 +103,7 @@ const eTron = {
 						break;
 					case "RIGHT":
 						coord = `(${1*eTron.y + 1}, ${eTron.x})`;
-						if (1*eTron.y + 1 < gridSize[1] && !history.has(coord)) {
+						if (Number(1*eTron.y + 1) < Number(1*gridSize[1]) && !history.has(coord)) {
 							console.log(`\x1b[32mJe peux aller en ${coord}\x1b[0m`);
 							canMove = true;
 						} else {
@@ -131,4 +133,4 @@ const history = new Set();
 /* -------------------------------------------------------- */
 
 client.connect(8000, '127.0.0.1', signUp);
-client.on('data', eTron.move);
+client.on('data', eTron.stupid);
